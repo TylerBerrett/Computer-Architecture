@@ -83,6 +83,10 @@ class CPU:
         PRN = 0b01000111  # 71
         HLT = 0b00000001  # 1
         MUL = 0b10100010  # 162
+        POP = 0b01000110  # 70
+        PUSH = 0b01000101  # 69
+
+        SP = 0b00000111  # 7
 
         running = True
 
@@ -100,6 +104,21 @@ class CPU:
             elif IR == MUL:
                 self.reg[operand_a] = self.reg[operand_a] * self.reg[operand_b]
                 self.pc += 3
+            elif IR == PUSH:
+                reg = self.ram[self.pc + 1]
+                value = self.reg[reg]
+                # Decrement the sp
+                self.reg[SP] -= 1
+                # Copy
+                self.ram[self.reg[SP]] = value
+                self.pc += 2
+
+            elif IR == POP:
+                reg = self.ram[self.pc + 1]
+                value = self.ram[self.reg[SP]]
+                self.reg[reg] = value
+                self.reg[SP] += 1
+                self.pc += 2
             elif IR == HLT:
                 running = False
             else:
