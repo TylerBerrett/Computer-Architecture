@@ -11,6 +11,7 @@ class CPU:
         self.ram = [0] * 256  # the commands
         self.reg = [0] * 8
         self.pc = 0
+        self.equal = 0
 
     def ram_read(self, mar):
         return self.ram[mar]
@@ -85,6 +86,14 @@ class CPU:
         MUL = 0b10100010  # 162
         POP = 0b01000110  # 70
         PUSH = 0b01000101  # 69
+        RET = 0b00010001  # 17
+        CALL = 0b01010000  # 80
+        ADD = 0b10100000  # 160
+
+        CMP = 0b10100111  # 167
+        JMP = 0b01010100
+        JEQ = 0b01010101
+        JNE = 0b01010110
 
         SP = 0b00000111  # 7
 
@@ -104,6 +113,9 @@ class CPU:
             elif IR == MUL:
                 self.reg[operand_a] = self.reg[operand_a] * self.reg[operand_b]
                 self.pc += 3
+            elif IR == ADD:
+                self.reg[operand_a] = self.reg[operand_a] + self.reg[operand_b]
+                self.pc += 3
             elif IR == PUSH:
                 reg = self.ram[self.pc + 1]
                 value = self.reg[reg]
@@ -112,13 +124,36 @@ class CPU:
                 # Copy
                 self.ram[self.reg[SP]] = value
                 self.pc += 2
-
             elif IR == POP:
                 reg = self.ram[self.pc + 1]
                 value = self.ram[self.reg[SP]]
                 self.reg[reg] = value
                 self.reg[SP] += 1
                 self.pc += 2
+            elif IR == CALL:
+                self.reg[SP] -= 1
+                self.ram[self.reg[SP]] = self.pc + 2
+
+                reg = self.ram[self.pc + 1]
+                self.pc = self.reg[reg]
+            elif IR == RET:
+                self.pc = self.ram[self.reg[SP]]
+                self.reg[SP] += 1
+            elif IR == CMP:
+                self.equal = 1 if self.reg[operand_a] == self.reg[operand_b] else 0
+                self.pc += 3
+            elif IR == JMP:
+                self.pc = self.reg[operand_a]
+            elif IR == JEQ:
+                if self.equal == 1:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
+            elif IR == JNE:
+                if self.equal == 0:
+                    self.pc = self.reg[operand_a]
+                else:
+                    self.pc += 2
             elif IR == HLT:
                 running = False
             else:
